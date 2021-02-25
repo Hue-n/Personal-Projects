@@ -1,130 +1,172 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 [RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour
 {
-    /// <summary>
-    /// Title: Player Controller Iteration 3
-    /// Type: Character Controller
-    /// Comments: Updated to reflect the Input Processing, Input Calculation structure.
-    /// Developed more to include a "States" section.
-    /// </summary>
+    //! Change movement to reflect euler angles
+    //+ Changed movement to reflect euler agles
+    //! Fix "flying player" bug
+    //! Add Jump
+    //+ Added Jump mechanic
 
-    [Header("Player Variables")]
-    private CharacterController Characon;
-    public int CurrentHealth;
+    /* Introduction Text:
+     * Character Controller: Yakuza
+     * Type of: Character Controller
+     * Comments: Improved upon the base character controller iteration.
+     */
 
-    [Header("Jump Dependencies and Variables")]
+    #region Dependencies & Variables
+    [Space]
+    [Header("Player's Variables")]
+    public float Speed = 10f;
     public Transform groundCheck;
-    public LayerMask groundMask;
     public float groundDistance = 0.4f;
+    public LayerMask groundMask;
     public float jumpHeight = 3f;
-    public bool isGrounded;
+    public GameObject RightWing;
+    public GameObject LeftWing;
     private Vector3 velocity;
+    [SerializeField] private bool IsGrounded;
 
-    [Header("Player Move and Run Variables")]
-    [Range(0, 50)] public float Speed = 20f;
-    public bool isSprinting;
-    public float maxSprint = 50f;
-    public float currentSprint;
-    public bool canSprint;
+    [Header("Dependencies")]
+    public AudioManager audioManager;
+    private CharacterController CharControl;
+
+    [Header("Player Stats")]
+    public static float CurrentHealth;
+
+    //Components
+    Animator anim;
+
+    //Audio
+    public AudioClip[] sounds = new AudioClip[3];
+    public AudioSource[] audiomanagerAudioSource;
+    /// <summary>
+    /// Sound Effects List:
+    /// 0: Eagle Jump sound effect
+    /// 1: Shoot sound effect
+    /// 2: Player Step 1
+    /// </summary>
+    #endregion
 
     #region Start & Update
-    // Start is called before the first frame update
-    void Awake()
+    private void Awake()
     {
-        canSprint = true;
+        GameManager.player = gameObject;
         CurrentHealth = GameManager.maxPlayerHealth;
-        currentSprint = maxSprint;
+    }
 
-        Characon = GetComponent<CharacterController>();
+    // Start is called before the first frame update
+    void Start()
+    {
+        audiomanagerAudioSource = audioManager.GetComponents<AudioSource>();
+        CharControl = GetComponent<CharacterController>();
+        anim = GetComponent<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
         ProcessInputs();
-        GroundCheck();
+        CalculatePlayerStats();
+        if (Input.GetKeyDown(KeyCode.Minus)) CurrentHealth -= 1;
     }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Hazard")
+        {
+            CurrentHealth = 0;
+            DeathCheck();
+        }
+    }
+
     #endregion
 
-    #region Input Processing
     void ProcessInputs()
     {
-        //Movement
-        float playerX = Input.GetAxis("Horizontal");
-        float playerY = Input.GetAxis("Vertical");
-        Move(playerX, playerY);
+        GroundCheck();
+        MovePlayer();
+        Jump();
+        DeathCheck();
+    }
 
-        //Jump
-        if (Input.GetButtonDown("Jump"))
+    #region Player Stats
+    
+    void CalculatePlayerStats()
+    {
+        Mathf.Clamp(CurrentHealth, 0, GameManager.maxPlayerHealth);
+    }
+
+    void DeathCheck()
+    {
+        if (CurrentHealth == 0)
         {
-            Jump();
+            Debug.Log("Dead");
+            GetComponent<Animator>().SetTrigger("death");
         }
-
-        //Sprint
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            isSprinting = !isSprinting;
-        }
-
-        if (Input.GetKeyUp(KeyCode.LeftShift))
-        {
-            isSprinting = !isSprinting;
-        }
-
-        Sprint(isSprinting);
     }
     #endregion
 
-    #region Input Calculation
-    void Move(float playerX, float playerY)
+    #region Player Movement
+    void MovePlayer()
     {
-        Vector3 moveDir = transform.right * playerX + transform.forward * playerY;
+        Vector3 MoveDir;
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
 
+        anim.SetFloat("BlendX", x);
+        anim.SetFloat("BlendY", z);
+
+        MoveDir = transform.right * x + transform.forward * z;
+        CharControl.Move(MoveDir * Speed * Time.deltaTime);
+
+        /// Title: Gravity Calc
+        /// Description: Calculates how much the player is affected by gravity and passes it to the Character Controller method for moving the player.
         velocity.y += GameManager.gravity * Time.deltaTime;
-        Characon.Move(moveDir * Speed * Time.deltaTime);
-        Characon.Move(velocity * Time.deltaTime);
+        CharControl.Move(velocity * Time.deltaTime);
     }
+
     #endregion
 
-    #region State Methods
-    void Sprint(bool isSprinting)
-    {
-        if (isSprinting && canSprint)
-        {
-            Speed = 20;
-        }
-
-        if (!isSprinting)
-        {
-            Speed = 10;
-        }
-    }
-
+    #region Jump
     void GroundCheck()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-        if (isGrounded && velocity.y < 0)
+        IsGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        if (IsGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
+
+            RightWing.SetActive(false);
+            LeftWing.SetActive(false);
         }
     }
 
     void Jump()
-    {
-        if (isGrounded)
+    {   
+        if (IsGrounded)
         {
-
+            anim.SetBool("is_Jumping", false);
         }
 
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (Input.GetButtonDown("Jump") && IsGrounded)
         {
+
+            RightWing.SetActive(true);
+            LeftWing.SetActive(true);
+
+            //Visual Feedback
+            anim.SetBool("is_Jumping", true);
+
             //Physics
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * GameManager.gravity);
+            
+            //Audio
+            audioManager.GetComponent<AudioManager>().PlaySoundEffect(sounds[0]);
         }
+    }
+    #endregion
 
-        #endregion
-    } 
 }
