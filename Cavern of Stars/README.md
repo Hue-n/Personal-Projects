@@ -58,7 +58,7 @@ The game is still in its early stages, but these have been my contributions so f
 ### Bullet System
 [Link to Video](https://www.youtube.com/watch?v=a91tjGwjt8g)
 
-####How it works
+#### How it works
 - Takes a base bullet class
 ```C#
 public class Bullet : MonoBehaviour
@@ -110,3 +110,38 @@ public class Bullet : MonoBehaviour
 
 ### Minimap System
 [Link to Video](https://youtu.be/MbOs4Dmgps8)
+
+#### How it works
+- Accesses the GlobalData class and checks whether the coordinates in its 2D level scene array equals an existing level. If the level exists, <br />
+the panel on that coordinate of the grid is changed to white. If the player is currently in that scene, that coordinate on the grid turns light blue.
+
+```C#
+    void DrawGrid()
+    {
+        for (int i = 0; i <= columnLength; i++)
+        {
+            for (int j = 0; j <= rowLength; j++)
+            {
+                var singleClone = gameObject;
+
+                if (GlobalData.Forest[i,j].SceneName[0] != '_')
+                {
+                    singleClone = Instantiate(single, new Vector3(x_Start + x_Space * i, y_Start + (-y_Space * j)), Quaternion.identity);
+                    singleClone.name = ("x: " + i + " y: " + j);
+                    singleClone.GetComponent<Image>().color = new Color(100, 100, 100);
+                    singleClone.name = ("OCCx: " + i + " OCCy: " + j);
+                }
+
+                if (GlobalData.CurrentRoomCoord == new Vector2(i, j))
+                {
+                    singleClone.GetComponent<Image>().color = new Color(0, 255, 255);
+                    singleClone.name = ("CURRENTx: " + i + " CURRENTy: " + j);
+                }
+
+                singleClone.transform.parent = gridParent.transform;
+
+            singleClone.layer = 5;
+            }
+        }
+    }
+```
