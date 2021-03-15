@@ -1,0 +1,37 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class ClientManager : MonoBehaviour
+{
+    public Client client;
+    public UIManager manager;
+    public InputField port;
+    public InputField username;
+    public string ipAddress;
+
+    private string ipAddressName;
+    private int portNumber;
+
+    public void ConnectToServer()
+    {
+        ipAddressName = ipAddress;
+        portNumber = int.Parse(port.text);
+        manager.SetUsername(username.text);
+        client.Connect(ipAddressName, portNumber);
+    }
+
+    public void HandleIPDropdownData(int val) 
+    {
+        switch (val)
+        {
+            case 0: ipAddress = ""; break;
+            case 1: ipAddress = "65.35.132.80"; break;
+            case 2: ipAddress = "192.168.1.3"; break;
+        }
+
+        Debug.Log(ipAddress);
+            
+    }
+}
