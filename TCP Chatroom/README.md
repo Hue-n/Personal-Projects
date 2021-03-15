@@ -2,7 +2,7 @@
 
 ### Project Description
 This TCP chatroom was created at a workshop for Networking held by Game Dev Knights hosted by GitHub user [1samuel411](https://github.com/1samuel411)! <br />
-I built on what he taught me by adding usernames, a scrolling chatbox, and a more streamlined IP entry system.
+I built on what he taught me by adding usernames and a scrolling chatbox.
 
 [Link to Exampe Video](https://youtu.be/eShlQrGn2aI)
 
@@ -27,6 +27,13 @@ I built on what he taught me by adding usernames, a scrolling chatbox, and a mor
 
             BeginAccepting();
         }
+```
+- Clients then create a username by calling the SetUsername function.
+```C#
+    public void SetUsername(string username)
+    {
+        this.username = username;
+    }
 ```
 - Clients are then able to connect to that server through the Unity Client Application
 
