@@ -27,8 +27,8 @@ public class ClientManager : MonoBehaviour
         switch (val)
         {
             case 0: ipAddress = ""; break;
-            case 1: ipAddress = "65.35.132.80"; break;
-            case 2: ipAddress = "192.168.1.3"; break;
+            case 1: ipAddress = ""; break;
+            case 2: ipAddress = ""; break;
         }
 
         Debug.Log(ipAddress);
