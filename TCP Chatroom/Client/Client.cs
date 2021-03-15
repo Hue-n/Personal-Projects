@@ -18,7 +18,7 @@ public class Client : MonoBehaviour
     private string ip;
     private int port;
 
-    public void Connect(string ip = "50.88.215.23", int port = 25565)
+    public void Connect(string ip = "", int port = 25565)
     {
         if(clientSocket == null)
         {
