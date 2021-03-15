@@ -8,7 +8,7 @@ The game is still in its early stages, but these have been my contributions so f
 [Link to Video](https://www.youtube.com/watch?v=mxe6qlLTjE4)
 
 #### How it works
-- A base saw object is created that rotates spins the saw at a given speed.
+- A base saw object is created that spins the saw at a given speed.
 
 ```C#
     void Update()
