@@ -125,4 +125,64 @@ private void RecieveCallback(IAsyncResult Result)
             socket.BeginSend(dataArray, 0, dataArray.Length, SocketFlags.None, SendCallback, socket);
         }
 ```
-- The client receives the message and 
+- The client receives the message 
+```C#
+    public IEnumerator RecieveData()
+    {
+        byte[] buffer = new byte[1024];
+        int recieved = 0;
+
+        while(IsConnected())
+        {
+            if(clientSocket.Available > 0)
+            {
+                recieved = clientSocket.Receive(buffer);
+                byte[] dataRecieved = new byte[recieved];
+                Array.Copy(buffer, dataRecieved, recieved);
+
+                byte header = dataRecieved[0];
+                byte[] messageData = new byte[dataRecieved.Length - 1];
+                Array.Copy(dataRecieved, 1, messageData, 0, messageData.Length);
+
+                string messageRecieved = Encoding.UTF8.GetString(messageData);
+
+                if (header == 0)
+                {
+                    onRecievedUserID.Invoke(messageRecieved);
+                }
+                else if (header == 9)
+                {
+                    onRecievedMessage.Invoke(messageRecieved);
+                }
+
+                Debug.Log("Recieved from server: (" + header + ") - " + messageRecieved);
+            }
+
+            yield return null;
+        }
+    }
+```
+- And puts that message into a list of messages
+```C#
+    void RecievedMessage(string message)
+    {
+        Message newMessage = new Message();
+        newMessage.text = message;
+
+        GameObject newText = Instantiate(textObject, chatPanel.transform);
+        newMessage.textObject = newText.GetComponent<Text>();
+        newMessage.textObject.text = newMessage.text;
+        messageList.Add(newMessage);
+    }
+```
+- This message list is then "Clamped" by removing the first member of the list if the length of the list becomes larger than the max amount of messages allowed.
+```C#
+   public void ClampMessages()
+    {
+        if (messageList.Count >= maxMessages)
+        {
+            Destroy(messageList[0].textObject.gameObject);
+            messageList.Remove(messageList[0]);
+        }
+    }
+```
